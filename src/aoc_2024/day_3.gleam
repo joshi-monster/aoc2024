@@ -44,7 +44,8 @@ fn do_parse_number(input, number, digits) {
     0, Error(Nil) -> Error(Nil)
     _, Ok(#(digit, input)) ->
       do_parse_number(input, digit + 10 * number, digits + 1)
-    _, Error(Nil) -> Ok(#(number, input))
+    _, Error(Nil) if digits <= 3 -> Ok(#(number, input))
+    _, Error(Nil) -> Error(Nil)
   }
 }
 

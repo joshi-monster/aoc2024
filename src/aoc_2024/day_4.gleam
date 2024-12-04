@@ -21,7 +21,6 @@ const directions = [
 pub fn pt_1(input: Dict(#(Int, Int), String)) {
   use count, #(row, col), chr <- dict.fold(input, 0)
   use <- bool.guard(when: chr != "X", return: count)
-
   use count, #(dy, dx) <- list.fold(directions, count)
   case
     dict.get(input, #(row + 1 * dy, col + 1 * dx)),

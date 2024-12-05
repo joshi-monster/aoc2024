@@ -7,9 +7,7 @@ pub fn parse(input: String) {
   use dict, line, row <- list.index_fold(string.split(input, "\n"), dict.new())
   use dict, chr, col <- list.index_fold(string.to_graphemes(line), dict)
   case chr {
-    "X" | "M" | "A" | "S" ->
-      dict
-      |> dict.insert(#(row, col), chr)
+    "X" | "M" | "A" | "S" -> dict.insert(dict, #(row, col), chr)
     _ -> dict
   }
 }

@@ -37,52 +37,61 @@ pub fn parse(input: String) {
 }
 
 pub fn pt_1(floor: Floor) {
-  walk(floor, floor.start.0, floor.start.1, N, set.new())
+  walk(floor, floor.start, N, set.new())
   |> set.size
 }
 
-fn walk(floor: Floor, x: Int, y: Int, dir: Dir, visited: Set(Pos)) {
-  let #(x2, y2, d2) = step(x, y, dir)
-  case set.contains(floor.obstacles, #(x2, y2)) {
-    True -> walk(floor, x, y, d2, visited)
+fn walk(floor: Floor, pos: Pos, dir: Dir, visited: Set(Pos)) {
+  let #(pos2, dir2) = step(pos, dir)
+  case set.contains(floor.obstacles, pos2) {
+    True -> walk(floor, pos, dir2, visited)
     False ->
-      case x2 > floor.width || y2 > floor.height || x2 < 0 || y2 < 0 {
-        False -> walk(floor, x2, y2, dir, set.insert(visited, #(x, y)))
-        True -> set.insert(visited, #(x, y))
+      case is_in_bounds(floor, pos2) {
+        True -> walk(floor, pos2, dir, set.insert(visited, pos))
+        False -> set.insert(visited, pos)
       }
   }
 }
 
-fn step(x, y, dir) {
+fn step(pos: Pos, dir) {
   case dir {
-    N -> #(x, y - 1, E)
-    W -> #(x - 1, y, N)
-    S -> #(x, y + 1, W)
-    E -> #(x + 1, y, S)
+    N -> #(#(pos.0, pos.1 - 1), E)
+    W -> #(#(pos.0 - 1, pos.1), N)
+    S -> #(#(pos.0, pos.1 + 1), W)
+    E -> #(#(pos.0 + 1, pos.1), S)
   }
 }
 
+fn is_in_bounds(floor: Floor, pos: Pos) {
+  0 <= pos.0 && pos.0 < floor.width && 0 <= pos.1 && pos.1 < floor.height
+}
+
 pub fn pt_2(floor: Floor) {
-  use count, x <- list.fold(list.range(0, floor.width - 1), 0)
-  use count, y <- list.fold(list.range(0, floor.height - 1), count)
-  use <- bool.guard(when: #(x, y) == floor.start, return: count)
-  let floor = Floor(..floor, obstacles: set.insert(floor.obstacles, #(x, y)))
-  case is_loop(floor, floor.start.0, floor.start.1, N, set.new()) {
+  let candidates = walk(floor, floor.start, N, set.new())
+  use count, pos <- set.fold(candidates, 0)
+  // io.debug(pos)
+  use <- bool.guard(when: pos == floor.start, return: count)
+  let floor = Floor(..floor, obstacles: set.insert(floor.obstacles, pos))
+  case is_loop(floor, floor.start, N, set.new()) {
     True -> count + 1
     False -> count
   }
 }
 
-fn is_loop(floor: Floor, x: Int, y: Int, dir: Dir, visited: Set(#(Pos, Dir))) {
-  use <- bool.guard(set.contains(visited, #(#(x, y), dir)), return: True)
-  let visited = set.insert(visited, #(#(x, y), dir))
-  let #(x2, y2, d2) = step(x, y, dir)
-  case set.contains(floor.obstacles, #(x2, y2)) {
-    True -> is_loop(floor, x, y, d2, visited)
-    False ->
-      case x2 > floor.width || y2 > floor.height || x2 < 0 || y2 < 0 {
-        False -> is_loop(floor, x2, y2, dir, visited)
-        True -> False
+fn is_loop(floor: Floor, pos: Pos, dir: Dir, visited: Set(#(Pos, Dir))) {
+  case set.contains(visited, #(pos, dir)) {
+    True -> True
+    False -> {
+      let visited = set.insert(visited, #(pos, dir))
+      let #(pos2, dir2) = step(pos, dir)
+      case set.contains(floor.obstacles, pos2) {
+        True -> is_loop(floor, pos, dir2, visited)
+        False ->
+          case is_in_bounds(floor, pos2) {
+            True -> is_loop(floor, pos2, dir, visited)
+            False -> False
+          }
       }
+    }
   }
 }

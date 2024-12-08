@@ -2,6 +2,7 @@ import gleam/int
 import gleam/list
 import gleam/result
 import gleam/string
+import pocket_watch
 
 pub fn parse(input: String) {
   use line <- list.filter_map(string.split(input, on: "\n"))
@@ -14,6 +15,7 @@ pub fn parse(input: String) {
 }
 
 pub fn pt_1(input: List(#(Int, List(Int)))) {
+  use <- pocket_watch.simple("part 1")
   sum(input, is_solvable1)
 }
 
@@ -37,6 +39,7 @@ fn sum(input, is_solvable) {
 }
 
 pub fn pt_2(input: List(#(Int, List(Int)))) {
+  use <- pocket_watch.simple("part 2")
   sum(input, is_solvable2)
 }
 

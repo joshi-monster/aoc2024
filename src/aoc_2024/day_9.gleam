@@ -2,10 +2,6 @@ import gleam/int
 import gleam/list
 import gleam/string
 
-pub type Disk {
-  Disk(chunks: List(Chunk), max_file_id: Int, size: Int)
-}
-
 pub type Chunk {
   File(offset: Int, size: Int, file_id: Int)
   Free(offset: Int, size: Int)
@@ -13,52 +9,38 @@ pub type Chunk {
 
 pub fn parse(input: String) {
   // let input = "2333133121414131402"
-  let disk = Disk(chunks: [], max_file_id: -1, size: 0)
   input
   |> string.trim
   |> string.to_graphemes
-  |> parse_loop(0, disk)
+  |> parse_loop(0, 0, [])
 }
 
-fn parse_loop(input, file_id, disk: Disk) {
+fn parse_loop(input, file_id, offset, chunks: List(Chunk)) {
   case input {
     [file_blocks, free_blocks, ..input] -> {
       let assert Ok(file_blocks) = int.parse(file_blocks)
       let assert Ok(free_blocks) = int.parse(free_blocks)
-      let disk =
-        Disk(
-          chunks: [
-            Free(offset: disk.size + file_blocks, size: free_blocks),
-            File(offset: disk.size, size: file_blocks, file_id:),
-            ..disk.chunks
-          ],
-          max_file_id: int.max(file_id, disk.max_file_id),
-          size: disk.size + free_blocks + file_blocks,
-        )
-      parse_loop(input, file_id + 1, disk)
+      let chunks = [
+        Free(offset: offset + file_blocks, size: free_blocks),
+        File(offset:, size: file_blocks, file_id:),
+        ..chunks
+      ]
+      let offset = offset + file_blocks + free_blocks
+      parse_loop(input, file_id + 1, offset, chunks)
     }
 
     [file_blocks, ..input] -> {
       let assert Ok(file_blocks) = int.parse(file_blocks)
-      let disk =
-        Disk(
-          chunks: [
-            File(offset: disk.size, size: file_blocks, file_id:),
-            ..disk.chunks
-          ],
-          max_file_id: int.max(file_id, disk.max_file_id),
-          size: disk.size + file_blocks,
-        )
-      parse_loop(input, file_id + 1, disk)
+      let chunks = [File(offset:, size: file_blocks, file_id:), ..chunks]
+      parse_loop(input, file_id + 1, offset + file_blocks, chunks)
     }
 
-    [] -> Disk(..disk, chunks: list.reverse(disk.chunks))
+    [] -> list.reverse(chunks)
   }
 }
 
-pub fn pt_1(disk: Disk) {
-  let defragmented =
-    defragment_blocks(disk.chunks, list.reverse(disk.chunks), [])
+pub fn pt_1(chunks: List(Chunk)) {
+  let defragmented = defragment_blocks(chunks, list.reverse(chunks), [])
   checksum(defragmented)
 }
 
@@ -112,8 +94,8 @@ fn defragment_blocks(forward, backward, result) {
   }
 }
 
-pub fn pt_2(disk: Disk) {
-  defragment_files([], disk.chunks, list.reverse(disk.chunks), [])
+pub fn pt_2(chunks: List(Chunk)) {
+  defragment_files([], chunks, list.reverse(chunks), [])
   |> checksum
 }
 
